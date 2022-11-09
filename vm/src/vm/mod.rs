@@ -41,7 +41,7 @@ use nix::{
     sys::signal::{kill, sigaction, SaFlags, SigAction, SigSet, Signal::SIGINT},
     unistd::getpid,
 };
-use std::sync::atomic::AtomicBool;
+use std::sync::{atomic::AtomicBool, Arc};
 use std::{
     borrow::Cow,
     cell::{Cell, Ref, RefCell},
@@ -77,6 +77,9 @@ pub struct VirtualMachine {
     pub state: PyRc<PyGlobalState>,
     pub initialized: bool,
     recursion_depth: Cell<usize>,
+
+    // FSBLOCK:
+    pub should_kill: Arc<AtomicBool>,
 }
 
 #[derive(Debug, Default)]
@@ -110,6 +113,11 @@ pub fn process_hash_secret_seed() -> u32 {
 }
 
 impl VirtualMachine {
+    // FSBLOCK:
+    pub fn set_should_kill(&mut self, should_kill: Arc<AtomicBool>) {
+        self.should_kill = should_kill;
+    }
+
     /// Create a new `VirtualMachine` structure.
     fn new(settings: Settings, ctx: PyRc<Context>) -> VirtualMachine {
         flame_guard!("new VirtualMachine");
@@ -189,6 +197,9 @@ impl VirtualMachine {
             }),
             initialized: false,
             recursion_depth: Cell::new(0),
+
+            // FSBLOCK:
+            should_kill: Default::default(),
         };
 
         if vm.state.hash_secret.hash_str("")

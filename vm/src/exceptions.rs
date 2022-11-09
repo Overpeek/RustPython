@@ -19,6 +19,7 @@ use itertools::Itertools;
 use std::{
     collections::HashSet,
     io::{self, BufRead, BufReader},
+    ops::Deref,
 };
 
 unsafe impl Traverse for PyBaseException {
@@ -223,9 +224,9 @@ impl VirtualMachine {
 }
 
 fn print_source_line<W: Write>(
-    output: &mut W,
-    filename: &str,
-    lineno: usize,
+    _output: &mut W,
+    _filename: &str,
+    _lineno: usize,
 ) -> Result<(), W::Error> {
     // FSBLOCK:
     Ok(())
