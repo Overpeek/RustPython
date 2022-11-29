@@ -35,24 +35,27 @@ use crate::{
     warn::WarningsState,
     AsObject, Py, PyObject, PyObjectRef, PyPayload, PyRef, PyResult,
 };
+pub use context::Context;
 use crossbeam_utils::atomic::AtomicCell;
 #[cfg(unix)]
 use nix::{
     sys::signal::{kill, sigaction, SaFlags, SigAction, SigSet, Signal::SIGINT},
     unistd::getpid,
 };
+pub use interpreter::Interpreter;
+pub(crate) use method::PyMethod;
+use parking_lot::RwLock;
 use rustpython_common::atomic::Ordering;
-use std::sync::{atomic::AtomicBool, Arc};
+pub use setting::Settings;
 use std::{
     borrow::Cow,
     cell::{Cell, Ref, RefCell},
     collections::{HashMap, HashSet},
 };
-
-pub use context::Context;
-pub use interpreter::Interpreter;
-pub(crate) use method::PyMethod;
-pub use setting::Settings;
+use std::{
+    sync::atomic::AtomicBool,
+    time::{Duration, Instant},
+};
 
 // Objects are live when they are on stack, or referenced by a name (for now)
 
@@ -80,7 +83,8 @@ pub struct VirtualMachine {
     recursion_depth: Cell<usize>,
 
     // FSBLOCK:
-    pub should_kill: Arc<AtomicBool>,
+    pub should_kill: PyRc<AtomicBool>,
+    pub deadline: PyRc<RwLock<Option<Instant>>>,
 }
 
 #[derive(Debug, Default)]
@@ -115,7 +119,7 @@ pub fn process_hash_secret_seed() -> u32 {
 
 impl VirtualMachine {
     // FSBLOCK:
-    pub fn set_should_kill(&mut self, should_kill: Arc<AtomicBool>) {
+    pub fn set_should_kill(&mut self, should_kill: PyRc<AtomicBool>) {
         self.should_kill = should_kill;
     }
 
@@ -125,6 +129,19 @@ impl VirtualMachine {
 
     pub fn unkill(&self) {
         self.should_kill.store(false, Ordering::SeqCst);
+    }
+
+    pub fn set_deadline(&self, deadline: Option<Instant>) {
+        *self.deadline.write() = deadline;
+    }
+
+    pub fn deadline_reached(&self) -> bool {
+        (|| {
+            self.deadline
+                .try_read()?
+                .map(|deadline| deadline > Duration::ZERO)
+        })()
+        .unwrap_or(false)
     }
 
     /// Create a new `VirtualMachine` structure.
@@ -209,6 +226,7 @@ impl VirtualMachine {
 
             // FSBLOCK:
             should_kill: Default::default(),
+            deadline: Default::default(),
         };
 
         if vm.state.hash_secret.hash_str("")

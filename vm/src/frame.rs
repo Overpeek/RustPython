@@ -352,7 +352,7 @@ impl ExecutingFrame<'_> {
         let instrs = &self.code.instructions;
         let mut arg_state = bytecode::OpArgState::default();
         loop {
-            if vm.should_kill.swap(false, Ordering::SeqCst) {
+            if vm.should_kill.swap(false, Ordering::SeqCst) || vm.deadline_reached() {
                 break Err(vm.new_os_error("Should kill".to_string()));
             }
 
