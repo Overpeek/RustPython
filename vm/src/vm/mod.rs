@@ -41,6 +41,7 @@ use nix::{
     sys::signal::{kill, sigaction, SaFlags, SigAction, SigSet, Signal::SIGINT},
     unistd::getpid,
 };
+use rustpython_common::atomic::Ordering;
 use std::sync::{atomic::AtomicBool, Arc};
 use std::{
     borrow::Cow,
@@ -116,6 +117,14 @@ impl VirtualMachine {
     // FSBLOCK:
     pub fn set_should_kill(&mut self, should_kill: Arc<AtomicBool>) {
         self.should_kill = should_kill;
+    }
+
+    pub fn kill(&self) {
+        self.should_kill.store(true, Ordering::SeqCst);
+    }
+
+    pub fn unkill(&self) {
+        self.should_kill.store(false, Ordering::SeqCst);
     }
 
     /// Create a new `VirtualMachine` structure.
