@@ -135,9 +135,9 @@ impl VirtualMachine {
 
     pub fn deadline_reached(&self) -> bool {
         (|| {
-            self.deadline
-                .try_read()?
-                .map(|deadline| deadline.elapsed() > Duration::ZERO)
+            self.deadline.try_read()?.map(|deadline| {
+                Instant::now().checked_duration_since(deadline) > Some(Duration::ZERO)
+            })
         })()
         .unwrap_or(false)
     }
