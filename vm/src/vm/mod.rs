@@ -139,7 +139,7 @@ impl VirtualMachine {
         (|| {
             self.deadline
                 .try_read()?
-                .map(|deadline| deadline > Duration::ZERO)
+                .map(|deadline| deadline.elapsed() > Duration::ZERO)
         })()
         .unwrap_or(false)
     }
