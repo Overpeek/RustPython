@@ -162,6 +162,7 @@ impl VirtualMachine {
             initialized: self.initialized,
             recursion_depth: Cell::new(0),
             should_kill: self.should_kill.clone(),
+            deadline: self.deadline.clone(),
         };
         ThreadedVirtualMachine { vm }
     }
