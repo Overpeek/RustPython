@@ -42,6 +42,7 @@ use nix::{
     sys::signal::{kill, sigaction, SaFlags, SigAction, SigSet, Signal::SIGINT},
     unistd::getpid,
 };
+use instant::Instant;
 pub use interpreter::Interpreter;
 pub(crate) use method::PyMethod;
 use parking_lot::RwLock;
@@ -52,10 +53,7 @@ use std::{
     cell::{Cell, Ref, RefCell},
     collections::{HashMap, HashSet},
 };
-use std::{
-    sync::atomic::AtomicBool,
-    time::{Duration, Instant},
-};
+use std::{sync::atomic::AtomicBool, time::Duration};
 
 // Objects are live when they are on stack, or referenced by a name (for now)
 

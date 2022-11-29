@@ -76,6 +76,7 @@ memoffset = "0.6.5"
 optional = "0.5.0"
 result-like = "0.4.5"
 timsort = "0.1.2"
+instant = "0.1.12"
 
 # RustPython crates implementing functionality based on CPython
 sre-engine = "0.4.1"
