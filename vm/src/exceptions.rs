@@ -227,24 +227,7 @@ fn print_source_line<W: Write>(
     filename: &str,
     lineno: usize,
 ) -> Result<(), W::Error> {
-    // TODO: use io.open() method instead, when available, according to https://github.com/python/cpython/blob/main/Python/traceback.c#L393
-    // TODO: support different encodings
-    let file = match std::fs::File::open(filename) {
-        Ok(file) => file,
-        Err(_) => return Ok(()),
-    };
-    let file = BufReader::new(file);
-
-    for (i, line) in file.lines().enumerate() {
-        if i + 1 == lineno {
-            if let Ok(line) = line {
-                // Indented with 4 spaces
-                writeln!(output, "    {}", line.trim_start())?;
-            }
-            return Ok(());
-        }
-    }
-
+    // FSBLOCK:
     Ok(())
 }
 
