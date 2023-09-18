@@ -22,7 +22,6 @@ use crate::{
 use indexmap::IndexMap;
 use itertools::Itertools;
 use rustpython_common::atomic::Ordering;
-use std::fmt;
 #[cfg(feature = "threading")]
 use std::sync::atomic;
 use std::{fmt, iter::zip};
